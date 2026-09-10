@@ -6,7 +6,7 @@ import BarcodePanel from './components/BarcodePanel';
 import ScoreGauge from './components/ScoreGauge';
 import RuleCard from './components/RuleCard';
 import ReportModal from './components/ReportModal';
-import { Scale, CheckSquare } from 'lucide-react';
+import { CheckSquare } from 'lucide-react';
 
 export default function App() {
   const [samples, setSamples] = useState([]);
@@ -156,20 +156,20 @@ export default function App() {
 
           <BarcodePanel barcodes={scanData?.barcodes} />
 
-          <div className="enterprise-card" style={{ padding: '18px', flex: 1 }}>
+          <div className="gov-card" style={{ padding: '18px 20px', flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckSquare size={17} color="#38bdf8" />
-                <h2 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#f1f5f9' }}>
-                  Statutory Rule Compliance Matrix (Rules 6 & 9)
+                <CheckSquare size={17} color="#2563eb" />
+                <h2 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                  Statutory Rule Compliance Matrix (Rules 6 &amp; 9)
                 </h2>
               </div>
-              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                Select rule to focus on canvas
+              <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                Select rule to inspect on label
               </span>
             </div>
 
-            <div style={{ maxHeight: '480px', overflowY: 'auto', paddingRight: '4px' }}>
+            <div style={{ maxHeight: '480px', overflowY: 'auto', paddingRight: '2px' }}>
               {scanData?.rules?.map((rule) => (
                 <RuleCard 
                   key={rule.rule_id}

@@ -1,97 +1,107 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Download, Eye } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Download, Eye, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function ScoreGauge({ scanData, onExportPdf, onOpenModal, exporting }) {
   if (!scanData) return null;
 
-  const score = scanData.compliance_score || 0;
+  const score = Math.round(scanData.compliance_score || 0);
   const isCompliant = scanData.verdict === 'COMPLIANT';
   const isCritical = scanData.fail_count > 2;
 
-  const strokeColor = isCompliant ? '#10b981' : isCritical ? '#f43f5e' : '#f59e0b';
-  const radius = 36;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const statusColor = isCompliant ? '#059669' : isCritical ? '#e11d48' : '#d97706';
+  const statusBg = isCompliant ? '#ecfdf5' : isCritical ? '#fff1f2' : '#fffbeb';
+  const statusBorder = isCompliant ? '#a7f3d0' : isCritical ? '#fecdd3' : '#fde68a';
 
   return (
-    <div className="enterprise-card" style={{ padding: '16px 20px', marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Gauge */}
-          <div style={{ position: 'relative', width: '82px', height: '82px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="82" height="82" viewBox="0 0 82 82">
-              <circle
-                cx="41"
-                cy="41"
-                r={radius}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.08)"
-                strokeWidth="7"
-              />
-              <circle
-                cx="41"
-                cy="41"
-                r={radius}
-                fill="none"
-                stroke={strokeColor}
-                strokeWidth="7"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                transform="rotate(-90 41 41)"
-                style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}
-              />
-            </svg>
-            <div style={{ position: 'absolute', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-title)', fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
-                {Math.round(score)}%
-              </div>
-              <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-                Compliance
-              </div>
-            </div>
+    <div className="gov-card" style={{ padding: '20px 24px', marginBottom: '18px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        
+        {/* Left: Score & Verdict Breakdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          
+          {/* Numerical Score Box */}
+          <div style={{
+            minWidth: '88px',
+            height: '84px',
+            borderRadius: '10px',
+            background: statusBg,
+            border: `1.5px solid ${statusBorder}`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '8px',
+            flexShrink: 0
+          }}>
+            <span style={{ fontSize: '1.65rem', fontWeight: 900, color: statusColor, lineHeight: 1 }}>
+              {score}%
+            </span>
+            <span style={{ fontSize: '0.66rem', fontWeight: 700, color: statusColor, textTransform: 'uppercase', marginTop: '4px', letterSpacing: '0.4px' }}>
+              Compliance
+            </span>
           </div>
 
+          {/* Verdict Details */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span 
-                className={`status-pill ${isCompliant ? 'pill-pass' : isCritical ? 'pill-fail' : 'pill-amber'}`}
-                style={{ fontSize: '0.78rem', padding: '3px 10px' }}
-              >
-                {isCompliant ? <ShieldCheck size={13} /> : <ShieldAlert size={13} />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                background: statusBg,
+                color: statusColor,
+                border: `1px solid ${statusBorder}`,
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                letterSpacing: '0.01em'
+              }}>
+                {isCompliant ? <ShieldCheck size={15} /> : <ShieldAlert size={15} />}
                 {scanData.verdict}
               </span>
             </div>
-            <div style={{ fontSize: '0.84rem', color: '#f1f5f9', fontWeight: 500, maxWidth: '340px' }}>
+
+            <div style={{ fontSize: '0.86rem', color: '#334155', fontWeight: 500, maxWidth: '400px', lineHeight: 1.4 }}>
               {scanData.summary}
             </div>
-            <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px' }}>
-              Statutory Declarations Passed: <b style={{ color: '#34d399' }}>{scanData.pass_count}</b> / {scanData.total_rules}
+
+            <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span>
+                Statutory Declarations Passed: <b style={{ color: '#047857' }}>{scanData.pass_count}</b> / {scanData.total_rules}
+              </span>
+              {scanData.fail_count > 0 && (
+                <span style={{ color: '#be123c', fontWeight: 600 }}>
+                  ({scanData.fail_count} non-compliant)
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Right: Export & Preview Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button 
-            className="action-btn btn-dark"
+            className="btn-secondary"
             onClick={onOpenModal}
-            style={{ whiteSpace: 'nowrap', border: '1px solid rgba(56, 189, 248, 0.3)', color: '#38bdf8' }}
-            title="Preview and Print Official Certificate"
+            style={{ padding: '8px 14px', whiteSpace: 'nowrap' }}
+            title="Inspect & Print Official Digital Certificate"
           >
-            <Eye size={14} />
+            <Eye size={15} />
             View Certificate
           </button>
 
           <button 
-            className="action-btn btn-cyan"
+            className="btn-primary"
             onClick={onExportPdf}
             disabled={exporting}
-            style={{ whiteSpace: 'nowrap' }}
+            style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}
           >
-            <Download size={14} />
-            {exporting ? 'Generating...' : 'Download PDF'}
+            <Download size={15} />
+            {exporting ? 'Generating PDF...' : 'Download PDF Report'}
           </button>
         </div>
+
       </div>
     </div>
   );

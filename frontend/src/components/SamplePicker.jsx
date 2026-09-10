@@ -1,22 +1,22 @@
 import React from 'react';
-import { Package, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Package, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function SamplePicker({ samples, selectedSampleId, onSelectSample, loading }) {
   return (
-    <div className="enterprise-card" style={{ padding: '14px 16px', marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+    <div className="gov-card" style={{ padding: '16px 20px', marginBottom: '18px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Package size={16} color="#38bdf8" />
-          <span style={{ fontWeight: 700, fontSize: '0.86rem', color: '#f1f5f9' }}>
+          <Package size={17} color="#1e40af" />
+          <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             Benchmark Test Packaging Library
           </span>
         </div>
-        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-          Instant 1-Click Inspection
+        <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 500 }}>
+          Click any product to inspect
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
         {samples.map((s) => {
           const isCompliant = s.expected_verdict.includes('COMPLIANT') && !s.expected_verdict.includes('NON');
           const isSelected = selectedSampleId === s.id;
@@ -26,28 +26,43 @@ export default function SamplePicker({ samples, selectedSampleId, onSelectSample
               key={s.id}
               onClick={() => !loading && onSelectSample(s.id)}
               style={{
-                padding: '10px 12px',
+                padding: '10px 14px',
                 borderRadius: '8px',
-                border: isSelected ? '1.5px solid #38bdf8' : '1px solid var(--border-subtle)',
-                background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'rgba(10, 16, 31, 0.6)',
+                border: '1px solid',
+                borderColor: isSelected ? '#2563eb' : '#e2e8f0',
+                background: isSelected ? '#eff6ff' : '#ffffff',
+                boxShadow: isSelected ? '0 0 0 1px #2563eb' : 'none',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.18s ease',
+                transition: 'border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px'
+                gap: '4px',
+                minHeight: '68px',
+                justifyContent: 'center'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 600, fontSize: '0.82rem', color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                <span style={{ 
+                  fontWeight: 700, 
+                  fontSize: '0.82rem', 
+                  color: isSelected ? '#1e40af' : '#1e293b', 
+                  whiteSpace: 'nowrap', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis' 
+                }}>
                   {s.name}
                 </span>
                 {isCompliant ? (
-                  <span className="status-pill pill-pass" style={{ fontSize: '0.66rem' }}><CheckCircle2 size={10} />Pass</span>
+                  <span className="badge badge-pass" style={{ fontSize: '0.64rem', padding: '2px 6px', flexShrink: 0 }}>
+                    <CheckCircle2 size={10} />Pass
+                  </span>
                 ) : (
-                  <span className="status-pill pill-fail" style={{ fontSize: '0.66rem' }}><AlertTriangle size={10} />Violations</span>
+                  <span className="badge badge-fail" style={{ fontSize: '0.64rem', padding: '2px 6px', flexShrink: 0 }}>
+                    <AlertTriangle size={10} />Violations
+                  </span>
                 )}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+              <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
                 {s.category}
               </div>
             </div>

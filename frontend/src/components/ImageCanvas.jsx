@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload, Layers, Crosshair, RefreshCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Upload, Layers, Crosshair, ZoomIn, ZoomOut, RotateCcw, ImageIcon } from 'lucide-react';
 
 export default function ImageCanvas({ 
   imageUrl, 
@@ -22,7 +22,7 @@ export default function ImageCanvas({
   const [showBarcodeBoxes, setShowBarcodeBoxes] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Sync dimensions whenever imageUrl, imageWidth, or imageHeight changes
+  // Sync dimensions whenever imageUrl or props change
   useEffect(() => {
     if (imageWidth && imageHeight) {
       setImgNaturalSize({ w: imageWidth, h: imageHeight });
@@ -49,24 +49,20 @@ export default function ImageCanvas({
   const viewH = imgNaturalSize.h || imageHeight || 360;
 
   return (
-    <div className="enterprise-card" style={{ padding: '18px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Canvas Top Bar */}
+    <div className="gov-card" style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Viewport Header Controls */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Crosshair size={18} color="#38bdf8" />
-          <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#f1f5f9' }}>
-            Optical Inspection Viewport ({viewW} × {viewH}px)
+          <Crosshair size={17} color="#2563eb" />
+          <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+            Optical Inspection Viewport
+          </span>
+          <span style={{ fontSize: '0.74rem', color: '#64748b', fontFamily: 'var(--font-mono)' }}>
+            ({viewW} × {viewH}px)
           </span>
           {sourceType === 'upload' && (
-            <span style={{ 
-              fontSize: '0.68rem', 
-              background: 'rgba(56, 189, 248, 0.2)', 
-              color: '#38bdf8', 
-              border: '1px solid #0284c7', 
-              padding: '2px 8px', 
-              borderRadius: '4px',
-              fontWeight: 600
-            }}>
+            <span className="badge badge-blue" style={{ fontSize: '0.66rem' }}>
               Custom Upload
             </span>
           )}
@@ -74,20 +70,20 @@ export default function ImageCanvas({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* Zoom controls */}
-          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '6px', border: '1px solid var(--border-subtle)', padding: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', padding: '2px' }}>
             <button
-              onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.2))}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', padding: '4px 6px', cursor: 'pointer', display: 'flex' }}
+              onClick={() => setZoomLevel(prev => Math.max(0.6, Math.round((prev - 0.2) * 10) / 10))}
+              style={{ background: 'transparent', border: 'none', color: '#64748b', padding: '3px 6px', cursor: 'pointer', display: 'flex' }}
               title="Zoom Out"
             >
               <ZoomOut size={13} />
             </button>
-            <span style={{ fontSize: '0.7rem', color: '#cbd5e1', padding: '0 4px', minWidth: '32px', textAlign: 'center' }}>
+            <span style={{ fontSize: '0.72rem', color: '#334155', fontWeight: 600, padding: '0 4px', minWidth: '34px', textAlign: 'center' }}>
               {Math.round(zoomLevel * 100)}%
             </span>
             <button
-              onClick={() => setZoomLevel(prev => Math.min(2.5, prev + 0.2))}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', padding: '4px 6px', cursor: 'pointer', display: 'flex' }}
+              onClick={() => setZoomLevel(prev => Math.min(2.5, Math.round((prev + 0.2) * 10) / 10))}
+              style={{ background: 'transparent', border: 'none', color: '#64748b', padding: '3px 6px', cursor: 'pointer', display: 'flex' }}
               title="Zoom In"
             >
               <ZoomIn size={13} />
@@ -95,18 +91,24 @@ export default function ImageCanvas({
             {zoomLevel !== 1 && (
               <button
                 onClick={() => setZoomLevel(1)}
-                style={{ background: 'transparent', border: 'none', color: '#38bdf8', padding: '4px 6px', cursor: 'pointer', display: 'flex' }}
+                style={{ background: 'transparent', border: 'none', color: '#2563eb', padding: '3px 6px', cursor: 'pointer', display: 'flex' }}
                 title="Reset Zoom"
               >
-                <RotateCcw size={11} />
+                <RotateCcw size={12} />
               </button>
             )}
           </div>
 
           {/* Layer toggles */}
           <button 
-            className="action-btn btn-dark" 
-            style={{ padding: '5px 9px', fontSize: '0.74rem', background: showOcrBoxes ? 'rgba(56, 189, 248, 0.15)' : 'transparent' }}
+            className="btn-secondary"
+            style={{ 
+              padding: '5px 10px', 
+              fontSize: '0.74rem', 
+              background: showOcrBoxes ? '#eff6ff' : '#ffffff',
+              borderColor: showOcrBoxes ? '#bfdbfe' : '#e2e8f0',
+              color: showOcrBoxes ? '#1d4ed8' : '#64748b'
+            }}
             onClick={() => setShowOcrBoxes(!showOcrBoxes)}
             title="Toggle OCR Text Bounding Boxes"
           >
@@ -114,25 +116,15 @@ export default function ImageCanvas({
             OCR ({ocrBlocks?.length || 0})
           </button>
 
-          {barcodes && barcodes.length > 0 && (
-            <button 
-              className="action-btn btn-dark" 
-              style={{ padding: '5px 9px', fontSize: '0.74rem', background: showBarcodeBoxes ? 'rgba(168, 85, 247, 0.2)' : 'transparent', color: '#c084fc' }}
-              onClick={() => setShowBarcodeBoxes(!showBarcodeBoxes)}
-              title="Toggle Barcode Bounding Boxes"
-            >
-              Barcodes ({barcodes.length})
-            </button>
-          )}
-
           {/* Upload Button */}
           <button 
-            className="action-btn btn-cyan"
+            className="btn-primary"
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
+            style={{ padding: '6px 12px', fontSize: '0.78rem' }}
           >
-            <Upload size={14} />
-            Upload Product Image
+            <Upload size={13} />
+            Upload Photo
           </button>
           <input 
             type="file" 
@@ -142,23 +134,22 @@ export default function ImageCanvas({
             onChange={(e) => {
               if (e.target.files?.[0]) {
                 onUploadImage(e.target.files[0]);
-                e.target.value = ''; // Reset so the same file can be re-selected if needed
+                e.target.value = '';
               }
             }}
           />
         </div>
       </div>
 
-      {/* Main Image Viewport Area */}
+      {/* Main Image Viewport Area (Fixed Height Container with clean border) */}
       <div 
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
         style={{
-          flex: 1,
-          minHeight: '420px',
-          background: '#040711',
-          borderRadius: '10px',
-          border: '1px solid rgba(56, 189, 248, 0.2)',
+          height: '440px',
+          background: '#0f172a',
+          borderRadius: '8px',
+          border: '1px solid #cbd5e1',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -168,10 +159,14 @@ export default function ImageCanvas({
         }}
       >
         {loading ? (
-          <div style={{ textAlign: 'center', color: '#38bdf8' }}>
-            <div style={{ width: '40px', height: '40px', border: '3px solid rgba(56, 189, 248, 0.2)', borderTopColor: '#38bdf8', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 14px' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Running Deep Learning OCR & Barcode Extraction...</div>
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px' }}>Detecting bounding boxes & checking Legal Metrology Rules 2011</div>
+          <div style={{ textAlign: 'center', color: '#93c5fd' }}>
+            <div style={{ width: '36px', height: '36px', border: '3px solid rgba(147, 197, 253, 0.2)', borderTopColor: '#60a5fa', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#f8fafc' }}>
+              Scanning Package Label &amp; Verifying Rules...
+            </div>
+            <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '4px' }}>
+              Extracting text declarations, net quantity, MRP &amp; consumer care
+            </div>
             <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
           </div>
         ) : imageUrl ? (
@@ -183,7 +178,7 @@ export default function ImageCanvas({
               position: 'relative', 
               display: 'inline-block', 
               maxWidth: '100%', 
-              maxHeight: '440px', 
+              maxHeight: '100%', 
               transform: `scale(${zoomLevel})`, 
               transformOrigin: 'center center', 
               transition: 'transform 0.15s ease' 
@@ -195,8 +190,8 @@ export default function ImageCanvas({
                 onLoad={handleImageLoad}
                 style={{
                   maxWidth: '100%',
-                  maxHeight: '440px',
-                  borderRadius: '6px',
+                  maxHeight: '416px',
+                  borderRadius: '4px',
                   objectFit: 'contain',
                   display: 'block'
                 }}
@@ -223,18 +218,18 @@ export default function ImageCanvas({
                   const isHovered = hoveredBlock?.text === block.text;
                   const isHighlight = highlightedField && block.text.toLowerCase().includes(highlightedField.toLowerCase().slice(0, 10));
                   
-                  let stroke = 'rgba(56, 189, 248, 0.45)';
-                  let fill = 'rgba(56, 189, 248, 0.06)';
+                  let stroke = 'rgba(56, 189, 248, 0.6)';
+                  let fill = 'rgba(56, 189, 248, 0.08)';
                   let strokeWidth = 1.2;
 
                   if (isHighlight) {
                     stroke = '#f59e0b';
-                    fill = 'rgba(245, 158, 11, 0.28)';
-                    strokeWidth = 2.8;
+                    fill = 'rgba(245, 158, 11, 0.3)';
+                    strokeWidth = 2.6;
                   } else if (isHovered) {
-                    stroke = '#38bdf8';
-                    fill = 'rgba(56, 189, 248, 0.25)';
-                    strokeWidth = 2.2;
+                    stroke = '#60a5fa';
+                    fill = 'rgba(96, 165, 250, 0.25)';
+                    strokeWidth = 2.0;
                   }
 
                   return (
@@ -259,7 +254,7 @@ export default function ImageCanvas({
                   );
                 })}
 
-                {/* 2. Barcode Bounding Boxes (Purple/Cyan) */}
+                {/* 2. Barcode Bounding Boxes */}
                 {showBarcodeBoxes && barcodes?.map((b, idx) => {
                   if (!b.bbox || b.bbox.length < 4) return null;
                   const [x, y, w, h] = b.bbox;
@@ -271,29 +266,29 @@ export default function ImageCanvas({
                         y={y}
                         width={w}
                         height={h}
-                        fill="rgba(168, 85, 247, 0.2)"
+                        fill="rgba(192, 132, 252, 0.2)"
                         stroke="#c084fc"
-                        strokeWidth={2.4}
+                        strokeWidth={2.2}
                         strokeDasharray="4 2"
                         rx={3}
                       />
                       <rect
                         x={x}
-                        y={Math.max(0, y - 18)}
-                        width={Math.min(w, 140)}
-                        height={16}
+                        y={Math.max(0, y - 16)}
+                        width={Math.min(w, 130)}
+                        height={15}
                         fill="#7e22ce"
                         rx={2}
                       />
                       <text
                         x={x + 4}
-                        y={Math.max(12, y - 6)}
+                        y={Math.max(11, y - 5)}
                         fill="#ffffff"
-                        fontSize="10"
+                        fontSize="9"
                         fontFamily="monospace"
                         fontWeight="bold"
                       >
-                        {b.type} {b.data?.slice(0, 10)}
+                        {b.type}
                       </text>
                     </g>
                   );
@@ -303,12 +298,12 @@ export default function ImageCanvas({
           </div>
         ) : (
           <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-            <Upload size={38} color="#38bdf8" style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.96rem' }}>
+            <ImageIcon size={36} color="#60a5fa" style={{ marginBottom: '10px' }} />
+            <div style={{ fontWeight: 700, color: '#f1f5f9', fontSize: '0.94rem' }}>
               Upload any packaged product photograph or label
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '4px' }}>
-              Supports real JPG, PNG, WEBP with arbitrary orientations & barcodes
+            <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '4px' }}>
+              Supports real JPG, PNG, WEBP product packages
             </div>
           </div>
         )}
@@ -320,35 +315,34 @@ export default function ImageCanvas({
             bottom: '12px',
             left: '12px',
             right: '12px',
-            background: 'rgba(11, 18, 36, 0.95)',
-            backdropFilter: 'blur(10px)',
+            background: 'rgba(15, 23, 42, 0.95)',
             border: '1px solid #38bdf8',
-            borderRadius: '8px',
-            padding: '8px 12px',
+            borderRadius: '6px',
+            padding: '7px 12px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
             zIndex: 10
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: '#38bdf8', fontWeight: 700 }}>
-                TEXT BLOCK:
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#38bdf8', fontWeight: 700 }}>
+                DECLARATION:
               </span>
-              <span style={{ fontSize: '0.8rem', color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontSize: '0.78rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 "{hoveredBlock.text}"
               </span>
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
               Conf: {(hoveredBlock.confidence * 100).toFixed(0)}%
             </div>
           </div>
         )}
       </div>
 
-      {/* Footer Info */}
+      {/* Legend Footer */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', fontSize: '0.74rem', color: '#64748b' }}>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '14px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ width: 8, height: 8, background: '#38bdf8', borderRadius: 2 }}></span> OCR Declaration
           </span>
@@ -356,13 +350,14 @@ export default function ImageCanvas({
             <span style={{ width: 8, height: 8, background: '#c084fc', borderRadius: 2 }}></span> Barcode / QR
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: 8, height: 8, background: '#f59e0b', borderRadius: 2 }}></span> Selected Rule
+            <span style={{ width: 8, height: 8, background: '#f59e0b', borderRadius: 2 }}></span> Focused Rule
           </span>
         </div>
         <div>
-          Click any text block to inspect matched Legal Metrology rule
+          Click any text block to inspect statutory rule
         </div>
       </div>
+
     </div>
   );
 }
