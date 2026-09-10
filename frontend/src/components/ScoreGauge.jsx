@@ -1,7 +1,7 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, Download, AlertTriangle, FileSpreadsheet } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Download, Eye } from 'lucide-react';
 
-export default function ScoreGauge({ scanData, onExportPdf, exporting }) {
+export default function ScoreGauge({ scanData, onExportPdf, onOpenModal, exporting }) {
   if (!scanData) return null;
 
   const score = scanData.compliance_score || 0;
@@ -71,15 +71,27 @@ export default function ScoreGauge({ scanData, onExportPdf, exporting }) {
           </div>
         </div>
 
-        <button 
-          className="action-btn btn-cyan"
-          onClick={onExportPdf}
-          disabled={exporting}
-          style={{ whiteSpace: 'nowrap' }}
-        >
-          <Download size={15} />
-          {exporting ? 'Generating PDF...' : 'Download Statutory PDF Audit'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="action-btn btn-dark"
+            onClick={onOpenModal}
+            style={{ whiteSpace: 'nowrap', border: '1px solid rgba(56, 189, 248, 0.3)', color: '#38bdf8' }}
+            title="Preview and Print Official Certificate"
+          >
+            <Eye size={14} />
+            View Certificate
+          </button>
+
+          <button 
+            className="action-btn btn-cyan"
+            onClick={onExportPdf}
+            disabled={exporting}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            <Download size={14} />
+            {exporting ? 'Generating...' : 'Download PDF'}
+          </button>
+        </div>
       </div>
     </div>
   );

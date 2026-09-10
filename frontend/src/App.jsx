@@ -5,7 +5,8 @@ import ImageCanvas from './components/ImageCanvas';
 import BarcodePanel from './components/BarcodePanel';
 import ScoreGauge from './components/ScoreGauge';
 import RuleCard from './components/RuleCard';
-import { Scale, CheckSquare, Sparkles, SlidersHorizontal } from 'lucide-react';
+import ReportModal from './components/ReportModal';
+import { Scale, CheckSquare } from 'lucide-react';
 
 export default function App() {
   const [samples, setSamples] = useState([]);
@@ -14,6 +15,7 @@ export default function App() {
   const [activeRuleId, setActiveRuleId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/samples')
@@ -80,20 +82,30 @@ export default function App() {
         const errJson = await res.json().catch(() => ({}));
         throw new Error(errJson.detail || `Server error (${res.status})`);
       }
-      const arrayBuffer = await res.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const data = await res.json();
+      if (!data.pdf_base64) {
+        throw new Error("Invalid PDF response structure");
+      }
+
+      // Convert base64 to binary ArrayBuffer safely
+      const binaryString = window.atob(data.pdf_base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const cleanName = (scanData.product_name || 'Report').replace(/[^a-zA-Z0-9_-]/g, '_');
-      a.download = `Legal_Metrology_Inspection_${cleanName}.pdf`;
+      a.download = data.filename || 'Legal_Metrology_Inspection_Report.pdf';
       document.body.appendChild(a);
       a.click();
-      a.remove();
-      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
+      document.body.removeChild(a);
     } catch (err) {
       console.error("Error exporting PDF:", err);
-      alert("PDF Generation Notice: " + err.message);
+      alert("PDF Notice: " + err.message);
     } finally {
       setExporting(false);
     }
@@ -138,6 +150,7 @@ export default function App() {
           <ScoreGauge 
             scanData={scanData} 
             onExportPdf={handleExportPdf}
+            onOpenModal={() => setIsModalOpen(true)}
             exporting={exporting}
           />
 
@@ -169,6 +182,15 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {/* Official Certificate & Print Preview Modal */}
+      <ReportModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        scanData={scanData}
+        onExportPdf={handleExportPdf}
+        exporting={exporting}
+      />
     </div>
   );
 }

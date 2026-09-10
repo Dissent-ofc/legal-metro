@@ -151,20 +151,21 @@ async def scan_package(
     }
 
 
+import base64
+
 @app.post("/api/export-pdf")
 async def export_pdf(payload: dict):
     try:
         pdf_bytes = generate_pdf_report(payload)
-        filename_clean = payload.get('product_name', 'Inspection_Report').replace(' ', '_')
-        return Response(
-            content=pdf_bytes,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename=Legal_Metrology_Inspection_{filename_clean}.pdf",
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache"
-            }
-        )
+        filename_clean = payload.get('product_name', 'Inspection_Report').replace(' ', '_').replace('/', '_')
+        pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        
+        return {
+            "success": True,
+            "filename": f"Legal_Metrology_Inspection_{filename_clean}.pdf",
+            "pdf_base64": pdf_b64,
+            "size_bytes": len(pdf_bytes)
+        }
     except Exception as e:
         import traceback
         traceback.print_exc()
