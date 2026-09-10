@@ -3,8 +3,8 @@ import { Package, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function SamplePicker({ samples, selectedSampleId, onSelectSample, loading }) {
   return (
-    <div className="gov-card" style={{ padding: '16px 20px', marginBottom: '18px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+    <div className="gov-card" style={{ padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Package size={17} color="#1e40af" />
           <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
@@ -16,7 +16,7 @@ export default function SamplePicker({ samples, selectedSampleId, onSelectSample
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', flex: 1 }}>
         {samples.map((s) => {
           const isCompliant = s.expected_verdict.includes('COMPLIANT') && !s.expected_verdict.includes('NON');
           const isSelected = selectedSampleId === s.id;
@@ -37,7 +37,6 @@ export default function SamplePicker({ samples, selectedSampleId, onSelectSample
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '4px',
-                minHeight: '68px',
                 justifyContent: 'center'
               }}
             >

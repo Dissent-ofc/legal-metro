@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import SamplePicker from './components/SamplePicker';
 import ImageCanvas from './components/ImageCanvas';
-import BarcodePanel from './components/BarcodePanel';
 import ScoreGauge from './components/ScoreGauge';
 import RuleCard from './components/RuleCard';
 import ReportModal from './components/ReportModal';
-import { CheckSquare } from 'lucide-react';
+import { CheckSquare, Barcode, Globe, CheckCircle } from 'lucide-react';
 
 export default function App() {
   const [samples, setSamples] = useState([]);
@@ -117,16 +116,31 @@ export default function App() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
 
-      <main className="dashboard-grid">
-        {/* Left Column: Image Canvas & Barcode Viewer */}
-        <section style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* 2-Row by 2-Column Perfectly Aligned Main Dashboard */}
+      <main className="dashboard-grid-2x2">
+        
+        {/* ROW 1, COL 1: Benchmark Packaging Library */}
+        <div>
           <SamplePicker 
             samples={samples} 
             selectedSampleId={selectedSampleId} 
             onSelectSample={handleSelectSample}
             loading={loading}
           />
+        </div>
 
+        {/* ROW 1, COL 2: Compliance Score Card */}
+        <div>
+          <ScoreGauge 
+            scanData={scanData} 
+            onExportPdf={handleExportPdf}
+            onOpenModal={() => setIsModalOpen(true)}
+            exporting={exporting}
+          />
+        </div>
+
+        {/* ROW 2, COL 1: Optical Inspection Viewport (Image Canvas) */}
+        <div style={{ height: '100%' }}>
           <ImageCanvas 
             imageUrl={scanData?.image_url}
             imageWidth={scanData?.image_width}
@@ -143,44 +157,60 @@ export default function App() {
             sourceType={scanData?.source}
             productName={scanData?.product_name}
           />
-        </section>
+        </div>
 
-        {/* Right Column: Scorecard, Barcode Details & 7-Rule Matrix */}
-        <section style={{ display: 'flex', flexDirection: 'column' }}>
-          <ScoreGauge 
-            scanData={scanData} 
-            onExportPdf={handleExportPdf}
-            onOpenModal={() => setIsModalOpen(true)}
-            exporting={exporting}
-          />
+        {/* ROW 2, COL 2: Statutory Compliance Matrix & Barcode Details */}
+        <div className="gov-card" style={{ padding: '18px 20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Section Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckSquare size={17} color="#2563eb" />
+              <h2 style={{ fontSize: '0.90rem', fontWeight: 800, color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                Statutory Rule Compliance Matrix (Rules 6 &amp; 9)
+              </h2>
+            </div>
+            <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+              Select rule to inspect on label
+            </span>
+          </div>
 
-          <BarcodePanel barcodes={scanData?.barcodes} />
-
-          <div className="gov-card" style={{ padding: '18px 20px', flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckSquare size={17} color="#2563eb" />
-                <h2 style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                  Statutory Rule Compliance Matrix (Rules 6 &amp; 9)
-                </h2>
+          {/* Optional Barcode Bar if detected */}
+          {scanData?.barcodes && scanData.barcodes.length > 0 && (
+            <div style={{
+              background: '#faf5ff',
+              border: '1px solid #e9d5ff',
+              borderRadius: '6px',
+              padding: '8px 12px',
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.76rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7e22ce', fontWeight: 700 }}>
+                <Barcode size={15} />
+                <span>{scanData.barcodes[0].type}: {scanData.barcodes[0].data}</span>
               </div>
-              <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
-                Select rule to inspect on label
+              <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <Globe size={11} /> {scanData.barcodes[0].country_origin}
               </span>
             </div>
+          )}
 
-            <div style={{ maxHeight: '480px', overflowY: 'auto', paddingRight: '2px' }}>
-              {scanData?.rules?.map((rule) => (
-                <RuleCard 
-                  key={rule.rule_id}
-                  rule={rule}
-                  isActive={activeRuleId === rule.rule_id}
-                  onClick={() => setActiveRuleId(activeRuleId === rule.rule_id ? null : rule.rule_id)}
-                />
-              ))}
-            </div>
+          {/* Rule Cards Scrollable Container */}
+          <div style={{ flex: 1, maxHeight: '420px', overflowY: 'auto', paddingRight: '2px' }}>
+            {scanData?.rules?.map((rule) => (
+              <RuleCard 
+                key={rule.rule_id}
+                rule={rule}
+                isActive={activeRuleId === rule.rule_id}
+                onClick={() => setActiveRuleId(activeRuleId === rule.rule_id ? null : rule.rule_id)}
+              />
+            ))}
           </div>
-        </section>
+        </div>
+
       </main>
 
       {/* Official Certificate & Print Preview Modal */}
