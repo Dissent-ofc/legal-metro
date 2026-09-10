@@ -76,16 +76,23 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(scanData),
       });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || `Server error (${res.status})`);
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Legal_Metrology_Inspection_${(scanData.product_name || 'Report').replace(/\\s+/g, '_')}.pdf`;
+      const cleanName = (scanData.product_name || 'Report').replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.download = `Legal_Metrology_Inspection_${cleanName}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
       console.error("Error exporting PDF:", err);
+      alert("PDF Generation Notice: " + err.message);
     } finally {
       setExporting(false);
     }

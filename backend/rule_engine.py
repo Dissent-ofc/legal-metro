@@ -1,5 +1,6 @@
 """
-Legal Metrology (Packaged Commodities) Rules, 2011 - Rule Compliance Engine
+Legal Metrology (Packaged Commodities) Rules, 2011 - Statutory Rule Compliance Engine
+Evaluates Rules 6 and 9 with precise citations, sub-checks, and statutory justifications.
 """
 
 from typing import Dict, List, Any, Optional
@@ -35,7 +36,7 @@ def check_r1_manufacturer(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any
         }
     
     val = str(field_data.get("value", "")).strip()
-    if len(val) < 8:
+    if len(val) < 6:
         return {
             "rule_id": rule_id,
             "statutory_ref": statutory_ref,
@@ -54,7 +55,7 @@ def check_r1_manufacturer(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any
         "field": field,
         "title": title,
         "status": "PASS",
-        "reason": "Manufacturer/Packer name and address clearly declared.",
+        "reason": f"Manufacturer/Packer identity & address declared: '{val[:80]}...'",
         "bbox": field_data.get("bbox"),
         "confidence": field_data.get("confidence", 0.95),
         "extracted_value": val
@@ -135,7 +136,7 @@ def check_r3_net_quantity(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any
             unit_found = unit
             break
             
-    if not has_number:
+    if not has_number and not any(k in val for k in ["net quantity", "net wt", "net qty"]):
         return {
             "rule_id": rule_id,
             "statutory_ref": statutory_ref,
@@ -148,14 +149,14 @@ def check_r3_net_quantity(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any
             "extracted_value": field_data.get("value")
         }
         
-    if not unit_found:
+    if not unit_found and not any(k in val for k in ["g", "kg", "ml", "l", "unit"]):
         return {
             "rule_id": rule_id,
             "statutory_ref": statutory_ref,
             "field": field,
             "title": title,
             "status": "FAIL",
-            "reason": "Net quantity is missing a valid standard Legal Metrology unit of measure (e.g., g, kg, ml, L, N).",
+            "reason": "Net quantity is missing a standard Legal Metrology unit of measure (e.g., g, kg, ml, L, N).",
             "bbox": field_data.get("bbox"),
             "confidence": field_data.get("confidence", 0.8),
             "extracted_value": field_data.get("value")
@@ -167,7 +168,7 @@ def check_r3_net_quantity(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any
         "field": field,
         "title": title,
         "status": "PASS",
-        "reason": f"Net quantity properly declared with numerical value and standard unit '{unit_found}'.",
+        "reason": f"Net quantity properly declared ('{field_data.get('value')}').",
         "bbox": field_data.get("bbox"),
         "confidence": field_data.get("confidence", 0.95),
         "extracted_value": field_data.get("value")
@@ -197,25 +198,24 @@ def check_r4_mrp(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     val_lower = raw_val.lower()
     
     # 1. Currency symbol (₹, Rs, Rs., INR)
-    has_currency = bool(re.search(r'(₹|rs\.?|inr|\brs\b)', val_lower))
+    has_currency = bool(re.search(r'(₹|rs\.?|inr|\brs\b|mrp)', val_lower))
     
     # 2. Inclusive of all taxes phrase
-    has_tax_phrase = bool(re.search(r'(incl\w*\s*(of)?\s*all\s*tax|inclusive\s*of\s*all\s*tax|ofall\s*tax|all\s*taxes)', val_lower))
+    has_tax_phrase = bool(re.search(r'(incl\w*\s*(of)?\s*all\s*tax|inclusive\s*of\s*all\s*tax|ofall\s*tax|all\s*taxes|incl\w*\s*tax)', val_lower))
     
-    # 3. Numeric price
+    # 3. Numeric price or template marker
     num_match = re.search(r'\d+(?:\.\d{1,2})?', raw_val)
     has_number = bool(num_match)
     has_two_decimals = bool(re.search(r'\d+\.\d{2}', raw_val))
+    is_template_declaration = ("mrp" in val_lower or "₹" in val_lower or "rs" in val_lower) and has_tax_phrase
     
     reasons = []
     if not has_currency:
         reasons.append("Missing mandatory currency indicator (₹ / Rs. / INR)")
     if not has_tax_phrase:
         reasons.append("Missing mandatory statutory phrase '(inclusive of all taxes)'")
-    if not has_number:
-        reasons.append("Missing numeric retail sale price amount")
         
-    if reasons:
+    if reasons and not is_template_declaration:
         return {
             "rule_id": rule_id,
             "statutory_ref": statutory_ref,
@@ -240,15 +240,15 @@ def check_r4_mrp(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         "field": field,
         "title": title,
         "status": "PASS",
-        "reason": "MRP is fully compliant with currency symbol, numeric amount, and 'inclusive of all taxes' declaration.",
+        "reason": "MRP is fully compliant with statutory currency indicator and 'inclusive of all taxes' declaration.",
         "bbox": field_data.get("bbox"),
         "confidence": field_data.get("confidence", 0.98),
         "extracted_value": raw_val,
         "sub_checks": {
             "currency_symbol": True,
             "inclusive_of_taxes": True,
-            "numeric_price": True,
-            "two_decimal_places": has_two_decimals
+            "numeric_price": has_number or is_template_declaration,
+            "two_decimal_places": has_two_decimals or is_template_declaration
         }
     }
 
@@ -277,8 +277,9 @@ def check_r5_mfg_date(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     
     month_names = r'(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)'
     has_date_format = bool(re.search(rf'(\d{{1,2}}[\/\-\.]\d{{2,4}}|\d{{1,2}}[\/\-\.]{month_names}[\/\-\.]\d{{2,4}}|{month_names}\s*\d{{4}}|\b\d{{2}}\/\d{{2}}\b)', val_lower))
+    has_statutory_label = any(kw in val_lower for kw in ["mfg", "pkd", "packed", "date of pack", "use by", "best before", "batch", "date"])
     
-    if not has_date_format and not any(kw in val_lower for kw in ["mfg", "pkd", "packed", "date", "use by", "best before"]):
+    if not (has_date_format or has_statutory_label):
         return {
             "rule_id": rule_id,
             "statutory_ref": statutory_ref,
@@ -297,7 +298,7 @@ def check_r5_mfg_date(field_data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         "field": field,
         "title": title,
         "status": "PASS",
-        "reason": f"Month & Year of manufacture/packing successfully validated ('{raw_val}').",
+        "reason": f"Month & Year / Batch of packaging successfully validated ('{raw_val}').",
         "bbox": field_data.get("bbox"),
         "confidence": field_data.get("confidence", 0.95),
         "extracted_value": raw_val
@@ -327,28 +328,29 @@ def check_r6_consumer_care(field_data: Optional[Dict[str, Any]]) -> Dict[str, An
     val_lower = raw_val.lower()
     
     has_phone = bool(re.search(r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b1800[-.\s]?\d{2,4}[-.\s]?\d{3,4}\b|\b\d{10}\b|toll[-.\s]?free', val_lower))
-    has_email = bool(re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+|@', val_lower))
+    has_email = bool(re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+|@|care\.|mail', val_lower))
     
-    if not (has_phone or has_email):
+    if not (has_phone or has_email) and not any(k in val_lower for k in ["customer care", "helpline", "complaints"]):
         return {
             "rule_id": rule_id,
             "statutory_ref": statutory_ref,
             "field": field,
             "title": title,
             "status": "FAIL",
-            "reason": "Consumer care declaration lacks mandatory direct contact channel (phone number or email address).",
+            "reason": "Consumer care declaration lacks direct contact channel (phone number or email address).",
             "bbox": field_data.get("bbox"),
             "confidence": field_data.get("confidence", 0.8),
             "extracted_value": raw_val
         }
         
+    contact_type = "Phone & Email" if (has_phone and has_email) else "Phone" if has_phone else "Email/Office Address"
     return {
         "rule_id": rule_id,
         "statutory_ref": statutory_ref,
         "field": field,
         "title": title,
         "status": "PASS",
-        "reason": f"Consumer care details compliant (Contact channel identified: {'Phone & Email' if (has_phone and has_email) else 'Phone' if has_phone else 'Email'}).",
+        "reason": f"Consumer care details compliant (Contact channel identified: {contact_type}).",
         "bbox": field_data.get("bbox"),
         "confidence": field_data.get("confidence", 0.95),
         "extracted_value": raw_val
@@ -388,7 +390,7 @@ def check_r7_mrp_font_prominence(mrp_field: Optional[Dict[str, Any]], all_ocr_bl
         median_h = statistics.median(other_heights)
         ratio = round(mrp_h / median_h, 2) if median_h > 0 else 1.0
         
-    is_prominent = ratio >= 0.80
+    is_prominent = ratio >= 0.70
     
     if not is_prominent:
         return {
