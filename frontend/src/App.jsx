@@ -80,7 +80,8 @@ export default function App() {
         const errJson = await res.json().catch(() => ({}));
         throw new Error(errJson.detail || `Server error (${res.status})`);
       }
-      const blob = await res.blob();
+      const arrayBuffer = await res.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -89,7 +90,7 @@ export default function App() {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
     } catch (err) {
       console.error("Error exporting PDF:", err);
       alert("PDF Generation Notice: " + err.message);
@@ -127,6 +128,8 @@ export default function App() {
             }}
             onUploadImage={handleUploadImage}
             loading={loading}
+            sourceType={scanData?.source}
+            productName={scanData?.product_name}
           />
         </section>
 

@@ -153,15 +153,22 @@ async def scan_package(
 
 @app.post("/api/export-pdf")
 async def export_pdf(payload: dict):
-    pdf_bytes = generate_pdf_report(payload)
-    filename_clean = payload.get('product_name', 'Inspection_Report').replace(' ', '_')
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename=Legal_Metrology_Inspection_{filename_clean}.pdf"
-        }
-    )
+    try:
+        pdf_bytes = generate_pdf_report(payload)
+        filename_clean = payload.get('product_name', 'Inspection_Report').replace(' ', '_')
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=Legal_Metrology_Inspection_{filename_clean}.pdf",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache"
+            }
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"PDF Generation failed: {str(e)}")
 
 
 if __name__ == "__main__":

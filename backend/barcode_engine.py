@@ -72,7 +72,14 @@ def detect_barcodes(image_bytes: bytes) -> List[Dict[str, Any]]:
     if not barcodes:
         try:
             detector = cv2.barcode_BarcodeDetector()
-            ok, decoded_info, decoded_type, corners = detector.detectAndDecode(img_cv)
+            ret = detector.detectAndDecode(img_cv)
+            if len(ret) == 4:
+                ok, decoded_info, decoded_type, corners = ret
+            elif len(ret) == 3:
+                decoded_info, decoded_type, corners = ret
+                ok = bool(decoded_info)
+            else:
+                ok, decoded_info = False, []
             if ok and decoded_info:
                 for data_str, fmt_str, corner in zip(decoded_info, decoded_type, corners):
                     if data_str:

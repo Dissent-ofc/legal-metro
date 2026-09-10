@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload, Layers, ZoomIn, ZoomOut, RotateCcw, Crosshair, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, Layers, Crosshair, RefreshCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 export default function ImageCanvas({ 
   imageUrl, 
@@ -10,7 +10,9 @@ export default function ImageCanvas({
   highlightedField, 
   onBlockClick,
   onUploadImage,
-  loading
+  loading,
+  sourceType,
+  productName
 }) {
   const fileInputRef = useRef(null);
   const imgRef = useRef(null);
@@ -20,11 +22,14 @@ export default function ImageCanvas({
   const [showBarcodeBoxes, setShowBarcodeBoxes] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
 
+  // Sync dimensions whenever imageUrl, imageWidth, or imageHeight changes
   useEffect(() => {
     if (imageWidth && imageHeight) {
       setImgNaturalSize({ w: imageWidth, h: imageHeight });
     }
-  }, [imageWidth, imageHeight]);
+    setZoomLevel(1);
+    setHoveredBlock(null);
+  }, [imageUrl, imageWidth, imageHeight]);
 
   const handleImageLoad = (e) => {
     const { naturalWidth, naturalHeight } = e.target;
@@ -40,21 +45,64 @@ export default function ImageCanvas({
     }
   };
 
-  const viewW = imgNaturalSize.w || 700;
-  const viewH = imgNaturalSize.h || 360;
+  const viewW = imgNaturalSize.w || imageWidth || 700;
+  const viewH = imgNaturalSize.h || imageHeight || 360;
 
   return (
     <div className="enterprise-card" style={{ padding: '18px', display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Canvas Top Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Crosshair size={18} color="#38bdf8" />
-          <span style={{ fontWeight: 700, fontSize: '0.94rem', color: '#f1f5f9' }}>
+          <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#f1f5f9' }}>
             Optical Inspection Viewport ({viewW} × {viewH}px)
           </span>
+          {sourceType === 'upload' && (
+            <span style={{ 
+              fontSize: '0.68rem', 
+              background: 'rgba(56, 189, 248, 0.2)', 
+              color: '#38bdf8', 
+              border: '1px solid #0284c7', 
+              padding: '2px 8px', 
+              borderRadius: '4px',
+              fontWeight: 600
+            }}>
+              Custom Upload
+            </span>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Zoom controls */}
+          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '6px', border: '1px solid var(--border-subtle)', padding: '2px' }}>
+            <button
+              onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.2))}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', padding: '4px 6px', cursor: 'pointer', display: 'flex' }}
+              title="Zoom Out"
+            >
+              <ZoomOut size={13} />
+            </button>
+            <span style={{ fontSize: '0.7rem', color: '#cbd5e1', padding: '0 4px', minWidth: '32px', textAlign: 'center' }}>
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <button
+              onClick={() => setZoomLevel(prev => Math.min(2.5, prev + 0.2))}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', padding: '4px 6px', cursor: 'pointer', display: 'flex' }}
+              title="Zoom In"
+            >
+              <ZoomIn size={13} />
+            </button>
+            {zoomLevel !== 1 && (
+              <button
+                onClick={() => setZoomLevel(1)}
+                style={{ background: 'transparent', border: 'none', color: '#38bdf8', padding: '4px 6px', cursor: 'pointer', display: 'flex' }}
+                title="Reset Zoom"
+              >
+                <RotateCcw size={11} />
+              </button>
+            )}
+          </div>
+
           {/* Layer toggles */}
           <button 
             className="action-btn btn-dark" 
@@ -91,7 +139,12 @@ export default function ImageCanvas({
             ref={fileInputRef} 
             style={{ display: 'none' }} 
             accept="image/*"
-            onChange={(e) => e.target.files?.[0] && onUploadImage(e.target.files[0])}
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                onUploadImage(e.target.files[0]);
+                e.target.value = ''; // Reset so the same file can be re-selected if needed
+              }
+            }}
           />
         </div>
       </div>
@@ -122,12 +175,23 @@ export default function ImageCanvas({
             <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
           </div>
         ) : imageUrl ? (
-          <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', maxHeight: '440px', transform: `scale(${zoomLevel})`, transformOrigin: 'center center', transition: 'transform 0.15s ease' }}>
+          <div 
+            key={imageUrl}
+            style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <div style={{ 
+              position: 'relative', 
+              display: 'inline-block', 
+              maxWidth: '100%', 
+              maxHeight: '440px', 
+              transform: `scale(${zoomLevel})`, 
+              transformOrigin: 'center center', 
+              transition: 'transform 0.15s ease' 
+            }}>
               <img 
                 ref={imgRef}
                 src={imageUrl} 
-                alt="Packaged Commodity Inspection" 
+                alt={productName || "Packaged Commodity Inspection"} 
                 onLoad={handleImageLoad}
                 style={{
                   maxWidth: '100%',
