@@ -5,7 +5,7 @@ import ImageCanvas from './components/ImageCanvas';
 import ScoreGauge from './components/ScoreGauge';
 import RuleCard from './components/RuleCard';
 import ReportModal from './components/ReportModal';
-import { CheckSquare, Barcode, Globe, CheckCircle } from 'lucide-react';
+import { CheckSquare, Barcode, Globe } from 'lucide-react';
 
 export default function App() {
   const [samples, setSamples] = useState([]);
@@ -116,11 +116,11 @@ export default function App() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
 
-      {/* 2-Row by 2-Column Perfectly Aligned Main Dashboard */}
+      {/* 2-Row by 2-Column Perfectly Symmetrical Dashboard */}
       <main className="dashboard-grid-2x2">
         
         {/* ROW 1, COL 1: Benchmark Packaging Library */}
-        <div>
+        <div style={{ height: '100%' }}>
           <SamplePicker 
             samples={samples} 
             selectedSampleId={selectedSampleId} 
@@ -130,7 +130,7 @@ export default function App() {
         </div>
 
         {/* ROW 1, COL 2: Compliance Score Card */}
-        <div>
+        <div style={{ height: '100%' }}>
           <ScoreGauge 
             scanData={scanData} 
             onExportPdf={handleExportPdf}
@@ -160,18 +160,18 @@ export default function App() {
         </div>
 
         {/* ROW 2, COL 2: Statutory Compliance Matrix & Barcode Details */}
-        <div className="gov-card" style={{ padding: '18px 20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="gov-card" style={{ padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
           
           {/* Section Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckSquare size={17} color="#2563eb" />
-              <h2 style={{ fontSize: '0.90rem', fontWeight: 800, color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              <h2 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f2744', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                 Statutory Rule Compliance Matrix (Rules 6 &amp; 9)
               </h2>
             </div>
             <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
-              Select rule to inspect on label
+              Select rule to focus on label
             </span>
           </div>
 
@@ -181,15 +181,15 @@ export default function App() {
               background: '#faf5ff',
               border: '1px solid #e9d5ff',
               borderRadius: '6px',
-              padding: '8px 12px',
-              marginBottom: '10px',
+              padding: '6px 10px',
+              marginBottom: '8px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: '0.76rem'
+              fontSize: '0.74rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7e22ce', fontWeight: 700 }}>
-                <Barcode size={15} />
+                <Barcode size={14} />
                 <span>{scanData.barcodes[0].type}: {scanData.barcodes[0].data}</span>
               </div>
               <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -198,8 +198,8 @@ export default function App() {
             </div>
           )}
 
-          {/* Rule Cards Scrollable Container */}
-          <div style={{ flex: 1, maxHeight: '420px', overflowY: 'auto', paddingRight: '2px' }}>
+          {/* Rule Cards Container - Fills entire card height with zero empty space */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', paddingRight: '2px' }}>
             {scanData?.rules?.map((rule) => (
               <RuleCard 
                 key={rule.rule_id}
